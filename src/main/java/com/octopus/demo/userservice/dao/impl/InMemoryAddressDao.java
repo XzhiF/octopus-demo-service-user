@@ -75,7 +75,7 @@ public class InMemoryAddressDao implements AddressDao {
         if (Boolean.TRUE.equals(address.getIsDefault())) {
             unsetPreviousDefault(address.getUserId());
             defaultAddressMap.put(address.getUserId(), address.getId());
-        } else {
+        } else if (address.getIsDefault() != null) {
             Long currentDefaultId = defaultAddressMap.get(address.getUserId());
             if (currentDefaultId != null && currentDefaultId.equals(address.getId())) {
                 defaultAddressMap.remove(address.getUserId());

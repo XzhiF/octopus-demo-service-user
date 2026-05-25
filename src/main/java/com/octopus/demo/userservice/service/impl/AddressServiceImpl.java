@@ -46,12 +46,25 @@ public class AddressServiceImpl implements AddressService {
         if (existing.isEmpty()) {
             return Optional.empty();
         }
-        if (!existing.get().getUserId().equals(userId)) {
+        Address existingAddr = existing.get();
+        if (!existingAddr.getUserId().equals(userId)) {
             return Optional.empty();
         }
-        address.setId(id);
-        address.setUserId(userId);
-        return addressDao.update(address);
+        mergeUpdate(existingAddr, address);
+        existingAddr.setId(id);
+        existingAddr.setUserId(userId);
+        return addressDao.update(existingAddr);
+    }
+
+    private void mergeUpdate(Address target, Address source) {
+        if (source.getReceiverName() != null) target.setReceiverName(source.getReceiverName());
+        if (source.getReceiverPhone() != null) target.setReceiverPhone(source.getReceiverPhone());
+        if (source.getProvince() != null) target.setProvince(source.getProvince());
+        if (source.getCity() != null) target.setCity(source.getCity());
+        if (source.getDistrict() != null) target.setDistrict(source.getDistrict());
+        if (source.getDetailAddress() != null) target.setDetailAddress(source.getDetailAddress());
+        if (source.getPostalCode() != null) target.setPostalCode(source.getPostalCode());
+        if (source.getIsDefault() != null) target.setIsDefault(source.getIsDefault());
     }
 
     @Override

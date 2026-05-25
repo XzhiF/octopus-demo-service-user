@@ -221,6 +221,22 @@ class AddressServiceImplTest {
         verify(addressDao, never()).update(any());
     }
 
+    @Test
+    void shouldMergePartialUpdateWithExistingAddress() {
+        var existing = createAddress(1L, 10L, "Zhang San", "13800138000",
+                "Beijing", "Beijing", "Haidian", "No.1 Road", "100000", true);
+        var partial = new Address();
+        partial.setReceiverName("Li Si");
+        var updated = createAddress(1L, 10L, "Li Si", "13800138000",
+                "Beijing", "Beijing", "Haidian", "No.1 Road", "100000", true);
+        when(addressDao.findById(1L)).thenReturn(Optional.of(existing));
+        when(addressDao.update(any(Address.class))).thenReturn(Optional.of(updated));
+
+        Optional<Address> result = addressService.updateAddress(1L, 10L, partial);
+        assertTrue(result.isPresent());
+        verify(addressDao).update(any(Address.class));
+    }
+
     private Address createAddress(Long id, Long userId, String receiverName, String receiverPhone,
                                   String province, String city, String district,
                                   String detailAddress, String postalCode, Boolean isDefault) {
