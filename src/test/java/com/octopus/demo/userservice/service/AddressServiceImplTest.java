@@ -188,6 +188,39 @@ class AddressServiceImplTest {
         verify(addressDao, never()).update(any());
     }
 
+    @Test
+    void shouldAutoSetNextAsDefaultWhenDeletingDefaultAddress() {
+        var defaultAddr = createAddress(1L, 10L, "Zhang San", "13800138000",
+                "Beijing", "Beijing", "Haidian", "No.1 Road", "100000", true);
+        var nextAddr = createAddress(2L, 10L, "Li Si", "13900139000",
+                "Shanghai", "Shanghai", "Pudong", "No.2 Road", "200000", false);
+        when(addressDao.findById(1L)).thenReturn(Optional.of(defaultAddr));
+        when(addressDao.deleteById(1L)).thenReturn(true);
+        when(addressDao.findByUserId(10L)).thenReturn(List.of(nextAddr));
+        when(addressDao.update(any(Address.class))).thenReturn(Optional.of(nextAddr));
+
+        boolean result = addressService.deleteAddress(1L, 10L);
+        assertTrue(result);
+        verify(addressDao).deleteById(1L);
+        verify(addressDao).findByUserId(10L);
+        verify(addressDao).update(any(Address.class));
+    }
+
+    @Test
+    void shouldNotAutoSetDefaultWhenNoOtherAddressExists() {
+        var defaultAddr = createAddress(1L, 10L, "Zhang San", "13800138000",
+                "Beijing", "Beijing", "Haidian", "No.1 Road", "100000", true);
+        when(addressDao.findById(1L)).thenReturn(Optional.of(defaultAddr));
+        when(addressDao.deleteById(1L)).thenReturn(true);
+        when(addressDao.findByUserId(10L)).thenReturn(List.of());
+
+        boolean result = addressService.deleteAddress(1L, 10L);
+        assertTrue(result);
+        verify(addressDao).deleteById(1L);
+        verify(addressDao).findByUserId(10L);
+        verify(addressDao, never()).update(any());
+    }
+
     private Address createAddress(Long id, Long userId, String receiverName, String receiverPhone,
                                   String province, String city, String district,
                                   String detailAddress, String postalCode, Boolean isDefault) {

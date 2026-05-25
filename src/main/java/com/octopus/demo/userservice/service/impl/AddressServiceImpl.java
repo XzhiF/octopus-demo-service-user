@@ -63,7 +63,21 @@ public class AddressServiceImpl implements AddressService {
         if (!existing.get().getUserId().equals(userId)) {
             return false;
         }
-        return addressDao.deleteById(id);
+        boolean wasDefault = Boolean.TRUE.equals(existing.get().getIsDefault());
+        boolean deleted = addressDao.deleteById(id);
+        if (deleted && wasDefault) {
+            autoSetNextDefault(userId);
+        }
+        return deleted;
+    }
+
+    private void autoSetNextDefault(Long userId) {
+        List<Address> remaining = addressDao.findByUserId(userId);
+        if (!remaining.isEmpty()) {
+            Address nextDefault = remaining.get(0);
+            nextDefault.setIsDefault(true);
+            addressDao.update(nextDefault);
+        }
     }
 
     @Override
