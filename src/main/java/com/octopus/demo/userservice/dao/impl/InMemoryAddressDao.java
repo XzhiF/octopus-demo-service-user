@@ -45,6 +45,10 @@ public class InMemoryAddressDao implements AddressDao {
 
     @Override
     public Address save(Address address) {
+        if (address.getIsDefault() == null) {
+            address.setIsDefault(false);
+        }
+
         Long id = idGenerator.getAndIncrement();
         address.setId(id);
         LocalDateTime now = LocalDateTime.now();
