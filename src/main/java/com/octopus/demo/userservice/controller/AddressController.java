@@ -72,16 +72,8 @@ public class AddressController {
 
         return addressService.updateAddress(id, userId, address)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    // Check if address exists but belongs to a different user
-                    Optional<Address> existing = addressService.findById(id);
-                    if (existing.isPresent() && !existing.get().getUserId().equals(userId)) {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                .body(Map.of("error", "地址不属于该用户"));
-                    }
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(Map.of("error", "地址不存在, id: " + id));
-                });
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "地址不存在, id: " + id)));
     }
 
     @DeleteMapping("/{id}")
@@ -89,12 +81,6 @@ public class AddressController {
         boolean deleted = addressService.deleteAddress(id, userId);
         if (deleted) {
             return ResponseEntity.noContent().build();
-        }
-        // Check if address exists but belongs to a different user
-        Optional<Address> existing = addressService.findById(id);
-        if (existing.isPresent() && !existing.get().getUserId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "地址不属于该用户"));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "地址不存在, id: " + id));
@@ -104,14 +90,7 @@ public class AddressController {
     public ResponseEntity<?> setDefaultAddress(@PathVariable Long userId, @PathVariable Long id) {
         return addressService.setDefaultAddress(id, userId)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    Optional<Address> existing = addressService.findById(id);
-                    if (existing.isPresent() && !existing.get().getUserId().equals(userId)) {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                .body(Map.of("error", "地址不属于该用户"));
-                    }
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(Map.of("error", "地址不存在, id: " + id));
-                });
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "地址不存在, id: " + id)));
     }
 }

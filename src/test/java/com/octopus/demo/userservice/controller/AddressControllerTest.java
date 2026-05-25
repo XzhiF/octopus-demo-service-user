@@ -191,7 +191,6 @@ class AddressControllerTest {
     @Test
     void shouldReturn404WhenUpdatingNonExistentAddress() throws Exception {
         when(addressService.updateAddress(eq(999L), eq(1L), any(Address.class))).thenReturn(Optional.empty());
-        when(addressService.findById(999L)).thenReturn(Optional.empty());
 
         String body = """
                 {
@@ -209,10 +208,7 @@ class AddressControllerTest {
     @Test
     void shouldReturn404WhenUpdatingAddressBelongsToDifferentUser() throws Exception {
         // Address 1 belongs to user 1, but request is from user 2
-        Address otherUserAddress = new Address(1L, 1L, "张三", "13800138000", "北京市", "北京市",
-                "朝阳区", "某某街道某某号", "100000", true, now, now);
         when(addressService.updateAddress(eq(1L), eq(2L), any(Address.class))).thenReturn(Optional.empty());
-        when(addressService.findById(1L)).thenReturn(Optional.of(otherUserAddress));
 
         String body = """
                 {
@@ -223,7 +219,7 @@ class AddressControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不属于该用户"));
+                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
     }
 
     @Test
@@ -252,7 +248,6 @@ class AddressControllerTest {
     @Test
     void shouldReturn404WhenDeletingNonExistentAddress() throws Exception {
         when(addressService.deleteAddress(999L, 1L)).thenReturn(false);
-        when(addressService.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/users/1/addresses/999"))
                 .andExpect(status().isNotFound())
@@ -261,15 +256,11 @@ class AddressControllerTest {
 
     @Test
     void shouldReturn404WhenDeletingAddressBelongsToDifferentUser() throws Exception {
-        // Address 1 belongs to user 1, but request is from user 2
-        Address otherUserAddress = new Address(1L, 1L, "张三", "13800138000", "北京市", "北京市",
-                "朝阳区", "某某街道某某号", "100000", true, now, now);
         when(addressService.deleteAddress(1L, 2L)).thenReturn(false);
-        when(addressService.findById(1L)).thenReturn(Optional.of(otherUserAddress));
 
         mockMvc.perform(delete("/api/users/2/addresses/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不属于该用户"));
+                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
     }
 
     // ===== PUT /api/users/{userId}/addresses/{id}/default =====
@@ -287,7 +278,6 @@ class AddressControllerTest {
     @Test
     void shouldReturn404WhenSettingDefaultForNonExistentAddress() throws Exception {
         when(addressService.setDefaultAddress(999L, 1L)).thenReturn(Optional.empty());
-        when(addressService.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/users/1/addresses/999/default"))
                 .andExpect(status().isNotFound())
@@ -296,14 +286,10 @@ class AddressControllerTest {
 
     @Test
     void shouldReturn404WhenSettingDefaultForAddressBelongsToDifferentUser() throws Exception {
-        // Address 1 belongs to user 1, but request is from user 2
-        Address otherUserAddress = new Address(1L, 1L, "张三", "13800138000", "北京市", "北京市",
-                "朝阳区", "某某街道某某号", "100000", true, now, now);
         when(addressService.setDefaultAddress(1L, 2L)).thenReturn(Optional.empty());
-        when(addressService.findById(1L)).thenReturn(Optional.of(otherUserAddress));
 
         mockMvc.perform(put("/api/users/2/addresses/1/default"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不属于该用户"));
+                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
     }
 }
