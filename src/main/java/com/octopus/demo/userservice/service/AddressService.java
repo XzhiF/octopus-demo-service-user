@@ -1,5 +1,7 @@
 package com.octopus.demo.userservice.service;
 
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.model.Address;
 
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.Optional;
 public interface AddressService {
 
     List<Address> findByUserId(Long userId);
+
+    PageResultBean<Address> findByUserId(Long userId, PageQueryBean query);
 
     Optional<Address> findById(Long id);
 

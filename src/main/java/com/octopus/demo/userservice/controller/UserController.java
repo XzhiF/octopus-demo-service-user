@@ -1,16 +1,17 @@
 package com.octopus.demo.userservice.controller;
 
+import com.octopus.demo.common.bean.R;
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.dto.CreateUserRequest;
 import com.octopus.demo.userservice.dto.UpdateUserRequest;
 import com.octopus.demo.userservice.model.User;
 import com.octopus.demo.userservice.service.UserService;
+import com.octopus.demo.userservice.vo.UserVO;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,49 +24,49 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public R<PageResultBean<UserVO>> getAllUsers(PageQueryBean query) {
+        PageResultBean<User> result = userService.getAllUsers(query);
+        PageResultBean<UserVO> voResult = new PageResultBean<>();
+        voResult.setCount(result.getCount());
+        voResult.setList(result.getList().stream().map(UserVO::from).collect(Collectors.toList()));
+        return R.ok(voResult);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    public R<UserVO> getUserById(@PathVariable Long id) {
         return userService.getUserById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "用户不存在, id: " + id)));
+                .map(UserVO::from)
+                .map(R::ok)
+                .orElseGet(() -> R.fail(404, "用户不存在, id: " + id));
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserRequest request) {
+    public R<UserVO> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setAge(request.getAge());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(userService.createUser(user));
+        User created = userService.createUser(user);
+        return R.ok(UserVO.from(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id,
-                                         @Valid @RequestBody UpdateUserRequest request) {
+    public R<UserVO> updateUser(@PathVariable Long id,
+                                 @Valid @RequestBody UpdateUserRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setAge(request.getAge());
-
         return userService.updateUser(id, user)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "用户不存在, id: " + id)));
+                .map(UserVO::from)
+                .map(R::ok)
+                .orElseGet(() -> R.fail(404, "用户不存在, id: " + id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public R<Void> deleteUser(@PathVariable Long id) {
         boolean deleted = userService.deleteUser(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "用户不存在, id: " + id));
+        if (!deleted) return R.fail(404, "用户不存在, id: " + id);
+        return R.ok();
     }
 }

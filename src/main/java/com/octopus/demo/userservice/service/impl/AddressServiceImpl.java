@@ -1,5 +1,7 @@
 package com.octopus.demo.userservice.service.impl;
 
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.dao.AddressDao;
 import com.octopus.demo.userservice.dao.UserDao;
 import com.octopus.demo.userservice.model.Address;
@@ -23,6 +25,11 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public List<Address> findByUserId(Long userId) {
         return addressDao.findByUserId(userId);
+    }
+
+    @Override
+    public PageResultBean<Address> findByUserId(Long userId, PageQueryBean query) {
+        return addressDao.findByUserId(userId, query);
     }
 
     @Override

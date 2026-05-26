@@ -1,17 +1,17 @@
 package com.octopus.demo.userservice.controller;
 
+import com.octopus.demo.common.bean.R;
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.dto.CreateAddressRequest;
 import com.octopus.demo.userservice.dto.UpdateAddressRequest;
 import com.octopus.demo.userservice.model.Address;
 import com.octopus.demo.userservice.service.AddressService;
+import com.octopus.demo.userservice.vo.AddressVO;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users/{userId}/addresses")
@@ -24,22 +24,26 @@ public class AddressController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Address>> getAddressesByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(addressService.findByUserId(userId));
+    public R<PageResultBean<AddressVO>> getAddressesByUserId(@PathVariable Long userId, PageQueryBean query) {
+        PageResultBean<Address> result = addressService.findByUserId(userId, query);
+        PageResultBean<AddressVO> voResult = new PageResultBean<>();
+        voResult.setCount(result.getCount());
+        voResult.setList(result.getList().stream().map(AddressVO::from).collect(Collectors.toList()));
+        return R.ok(voResult);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAddress(@PathVariable Long userId, @PathVariable Long id) {
+    public R<AddressVO> getAddress(@PathVariable Long userId, @PathVariable Long id) {
         return addressService.findById(id)
                 .filter(a -> a.getUserId().equals(userId))
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "地址不存在, id: " + id)));
+                .map(AddressVO::from)
+                .map(R::ok)
+                .orElseGet(() -> R.fail(404, "地址不存在, id: " + id));
     }
 
     @PostMapping
-    public ResponseEntity<?> createAddress(@PathVariable Long userId,
-                                           @Valid @RequestBody CreateAddressRequest request) {
+    public R<AddressVO> createAddress(@PathVariable Long userId,
+                                       @Valid @RequestBody CreateAddressRequest request) {
         Address address = new Address();
         address.setReceiverName(request.getReceiverName());
         address.setReceiverPhone(request.getReceiverPhone());
@@ -51,15 +55,15 @@ public class AddressController {
         address.setIsDefault(request.getIsDefault());
 
         return addressService.createAddress(userId, address)
-                .<ResponseEntity<?>>map(a -> ResponseEntity.status(HttpStatus.CREATED).body(a))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "用户不存在, id: " + userId)));
+                .map(AddressVO::from)
+                .map(R::ok)
+                .orElseGet(() -> R.fail(404, "用户不存在, id: " + userId));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAddress(@PathVariable Long userId,
-                                           @PathVariable Long id,
-                                           @Valid @RequestBody UpdateAddressRequest request) {
+    public R<AddressVO> updateAddress(@PathVariable Long userId,
+                                       @PathVariable Long id,
+                                       @Valid @RequestBody UpdateAddressRequest request) {
         Address address = new Address();
         if (request.getReceiverName() != null) address.setReceiverName(request.getReceiverName());
         if (request.getReceiverPhone() != null) address.setReceiverPhone(request.getReceiverPhone());
@@ -71,26 +75,23 @@ public class AddressController {
         if (request.getIsDefault() != null) address.setIsDefault(request.getIsDefault());
 
         return addressService.updateAddress(id, userId, address)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "地址不存在, id: " + id)));
+                .map(AddressVO::from)
+                .map(R::ok)
+                .orElseGet(() -> R.fail(404, "地址不存在, id: " + id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAddress(@PathVariable Long userId, @PathVariable Long id) {
+    public R<Void> deleteAddress(@PathVariable Long userId, @PathVariable Long id) {
         boolean deleted = addressService.deleteAddress(id, userId);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "地址不存在, id: " + id));
+        if (!deleted) return R.fail(404, "地址不存在, id: " + id);
+        return R.ok();
     }
 
     @PutMapping("/{id}/default")
-    public ResponseEntity<?> setDefaultAddress(@PathVariable Long userId, @PathVariable Long id) {
+    public R<AddressVO> setDefaultAddress(@PathVariable Long userId, @PathVariable Long id) {
         return addressService.setDefaultAddress(id, userId)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "地址不存在, id: " + id)));
+                .map(AddressVO::from)
+                .map(R::ok)
+                .orElseGet(() -> R.fail(404, "地址不存在, id: " + id));
     }
 }
