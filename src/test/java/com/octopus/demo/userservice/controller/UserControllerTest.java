@@ -1,5 +1,7 @@
 package com.octopus.demo.userservice.controller;
 
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.model.User;
 import com.octopus.demo.userservice.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -32,11 +34,15 @@ class UserControllerTest {
     void shouldGetAllUsers() throws Exception {
         var user = new User(1L, "test", "test@example.com", 25,
                 LocalDateTime.now(), LocalDateTime.now());
-        when(userService.getAllUsers()).thenReturn(List.of(user));
+        PageResultBean<User> result = new PageResultBean<>();
+        result.setCount(1);
+        result.setList(List.of(user));
+        when(userService.getAllUsers(any(PageQueryBean.class))).thenReturn(result);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("test"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.list[0].username").value("test"));
     }
 
     @Test
@@ -47,7 +53,8 @@ class UserControllerTest {
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("test"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.username").value("test"));
     }
 
     @Test
@@ -55,8 +62,9 @@ class UserControllerTest {
         when(userService.getUserById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/users/999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.msg").value("用户不存在, id: 999"));
     }
 
     @Test
@@ -75,8 +83,9 @@ class UserControllerTest {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("new"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.username").value("new"));
     }
 
     @Test
@@ -110,7 +119,8 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("updated"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.username").value("updated"));
     }
 
     @Test
@@ -126,8 +136,8 @@ class UserControllerTest {
         mockMvc.perform(put("/api/users/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
@@ -135,7 +145,8 @@ class UserControllerTest {
         when(userService.deleteUser(1L)).thenReturn(true);
 
         mockMvc.perform(delete("/api/users/1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
@@ -143,7 +154,7 @@ class UserControllerTest {
         when(userService.deleteUser(999L)).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 }

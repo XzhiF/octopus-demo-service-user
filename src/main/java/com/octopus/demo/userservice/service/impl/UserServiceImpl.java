@@ -1,5 +1,7 @@
 package com.octopus.demo.userservice.service.impl;
 
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.dao.UserDao;
 import com.octopus.demo.userservice.model.User;
 import com.octopus.demo.userservice.service.UserService;
@@ -20,6 +22,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return userDao.findAll();
+    }
+
+    @Override
+    public PageResultBean<User> getAllUsers(PageQueryBean query) {
+        return userDao.findAll(query);
     }
 
     @Override

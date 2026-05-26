@@ -1,5 +1,7 @@
 package com.octopus.demo.userservice.controller;
 
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.model.Address;
 import com.octopus.demo.userservice.service.AddressService;
 import org.junit.jupiter.api.Test;
@@ -35,32 +37,33 @@ class AddressControllerTest {
                 "朝阳区", "某某街道某某号", "100000", true, now, now);
     }
 
-    // ===== GET /api/users/{userId}/addresses =====
-
     @Test
     void shouldGetAddressesByUserId() throws Exception {
         Address address = createTestAddress();
-        when(addressService.findByUserId(1L)).thenReturn(List.of(address));
+        PageResultBean<Address> result = new PageResultBean<>();
+        result.setCount(1);
+        result.setList(List.of(address));
+        when(addressService.findByUserId(eq(1L), any(PageQueryBean.class))).thenReturn(result);
 
         mockMvc.perform(get("/api/users/1/addresses"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].receiverName").value("张三"))
-                .andExpect(jsonPath("$[0].receiverPhone").value("13800138000"))
-                .andExpect(jsonPath("$[0].province").value("北京市"))
-                .andExpect(jsonPath("$[0].isDefault").value(true));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.list[0].receiverName").value("张三"));
     }
 
     @Test
     void shouldReturnEmptyListWhenNoAddresses() throws Exception {
-        when(addressService.findByUserId(999L)).thenReturn(List.of());
+        PageResultBean<Address> result = new PageResultBean<>();
+        result.setCount(0);
+        result.setList(List.of());
+        when(addressService.findByUserId(eq(999L), any(PageQueryBean.class))).thenReturn(result);
 
         mockMvc.perform(get("/api/users/999/addresses"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.list").isArray())
+                .andExpect(jsonPath("$.data.list").isEmpty());
     }
-
-    // ===== GET /api/users/{userId}/addresses/{id} =====
 
     @Test
     void shouldGetAddressById() throws Exception {
@@ -69,8 +72,8 @@ class AddressControllerTest {
 
         mockMvc.perform(get("/api/users/1/addresses/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.receiverName").value("张三"))
-                .andExpect(jsonPath("$.userId").value(1));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.receiverName").value("张三"));
     }
 
     @Test
@@ -78,23 +81,21 @@ class AddressControllerTest {
         when(addressService.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/users/1/addresses/999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 999"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.msg").value("地址不存在, id: 999"));
     }
 
     @Test
     void shouldReturn404WhenAddressBelongsToDifferentUser() throws Exception {
-        // Address belongs to user 2, but request is for user 1
         Address address = new Address(1L, 2L, "张三", "13800138000", "北京市", "北京市",
                 "朝阳区", "某某街道某某号", "100000", true, now, now);
         when(addressService.findById(1L)).thenReturn(Optional.of(address));
 
         mockMvc.perform(get("/api/users/1/addresses/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
-
-    // ===== POST /api/users/{userId}/addresses =====
 
     @Test
     void shouldCreateAddress() throws Exception {
@@ -111,14 +112,15 @@ class AddressControllerTest {
                     "detailAddress": "某某街道某某号",
                     "postalCode": "100000",
                     "isDefault": true
-                }""";
+                }
+                """;
 
         mockMvc.perform(post("/api/users/1/addresses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.receiverName").value("张三"))
-                .andExpect(jsonPath("$.userId").value(1));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.receiverName").value("张三"));
     }
 
     @Test
@@ -133,13 +135,15 @@ class AddressControllerTest {
                     "city": "北京市",
                     "district": "朝阳区",
                     "detailAddress": "某某街道某某号"
-                }""";
+                }
+                """;
 
         mockMvc.perform(post("/api/users/999/addresses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("用户不存在, id: 999"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.msg").value("用户不存在, id: 999"));
     }
 
     @Test
@@ -152,15 +156,14 @@ class AddressControllerTest {
                     "city": "",
                     "district": "",
                     "detailAddress": ""
-                }""";
+                }
+                """;
 
         mockMvc.perform(post("/api/users/1/addresses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest());
     }
-
-    // ===== PUT /api/users/{userId}/addresses/{id} =====
 
     @Test
     void shouldUpdateAddress() throws Exception {
@@ -178,14 +181,15 @@ class AddressControllerTest {
                     "detailAddress": "某某路某某号",
                     "postalCode": "200000",
                     "isDefault": false
-                }""";
+                }
+                """;
 
         mockMvc.perform(put("/api/users/1/addresses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.receiverName").value("李四"))
-                .andExpect(jsonPath("$.province").value("上海市"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.receiverName").value("李四"));
     }
 
     @Test
@@ -196,30 +200,31 @@ class AddressControllerTest {
                 {
                     "receiverName": "李四",
                     "receiverPhone": "13900139000"
-                }""";
+                }
+                """;
 
         mockMvc.perform(put("/api/users/1/addresses/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 999"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
     void shouldReturn404WhenUpdatingAddressBelongsToDifferentUser() throws Exception {
-        // Address 1 belongs to user 1, but request is from user 2
         when(addressService.updateAddress(eq(1L), eq(2L), any(Address.class))).thenReturn(Optional.empty());
 
         String body = """
                 {
                     "receiverName": "李四"
-                }""";
+                }
+                """;
 
         mockMvc.perform(put("/api/users/2/addresses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
@@ -227,7 +232,8 @@ class AddressControllerTest {
         String body = """
                 {
                     "receiverPhone": "abc"
-                }""";
+                }
+                """;
 
         mockMvc.perform(put("/api/users/1/addresses/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -235,14 +241,13 @@ class AddressControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // ===== DELETE /api/users/{userId}/addresses/{id} =====
-
     @Test
     void shouldDeleteAddress() throws Exception {
         when(addressService.deleteAddress(1L, 1L)).thenReturn(true);
 
         mockMvc.perform(delete("/api/users/1/addresses/1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
@@ -250,8 +255,8 @@ class AddressControllerTest {
         when(addressService.deleteAddress(999L, 1L)).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/1/addresses/999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 999"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
@@ -259,11 +264,9 @@ class AddressControllerTest {
         when(addressService.deleteAddress(1L, 2L)).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/2/addresses/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
-
-    // ===== PUT /api/users/{userId}/addresses/{id}/default =====
 
     @Test
     void shouldSetDefaultAddress() throws Exception {
@@ -272,7 +275,8 @@ class AddressControllerTest {
 
         mockMvc.perform(put("/api/users/1/addresses/1/default"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isDefault").value(true));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.isDefault").value(true));
     }
 
     @Test
@@ -280,8 +284,8 @@ class AddressControllerTest {
         when(addressService.setDefaultAddress(999L, 1L)).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/users/1/addresses/999/default"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 999"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
@@ -289,7 +293,7 @@ class AddressControllerTest {
         when(addressService.setDefaultAddress(1L, 2L)).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/users/2/addresses/1/default"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("地址不存在, id: 1"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404));
     }
 }

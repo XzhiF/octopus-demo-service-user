@@ -1,5 +1,7 @@
 package com.octopus.demo.userservice.dao.impl;
 
+import com.octopus.demo.common.bean.PageQueryBean;
+import com.octopus.demo.common.bean.PageResultBean;
 import com.octopus.demo.userservice.dao.AddressDao;
 import com.octopus.demo.userservice.model.Address;
 import org.springframework.stereotype.Repository;
@@ -26,6 +28,31 @@ public class InMemoryAddressDao implements AddressDao {
                 result.add(address);
             }
         }
+        return result;
+    }
+
+    @Override
+    public PageResultBean<Address> findByUserId(Long userId, PageQueryBean query) {
+        List<Address> all = new ArrayList<>();
+        for (Address address : addressStore.values()) {
+            if (address.getUserId().equals(userId)) {
+                all.add(address);
+            }
+        }
+        long count = all.size();
+        long fromIndexLong = (long) (query.getPage() - 1) * query.getSize();
+        if (fromIndexLong >= count || fromIndexLong > Integer.MAX_VALUE) {
+            PageResultBean<Address> result = new PageResultBean<>();
+            result.setCount(count);
+            result.setList(List.of());
+            return result;
+        }
+        int fromIndex = (int) fromIndexLong;
+        int toIndex = Math.min(fromIndex + query.getSize(), all.size());
+        List<Address> page = new ArrayList<>(all.subList(fromIndex, toIndex));
+        PageResultBean<Address> result = new PageResultBean<>();
+        result.setCount(count);
+        result.setList(page);
         return result;
     }
 
