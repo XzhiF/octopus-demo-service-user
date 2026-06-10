@@ -51,7 +51,6 @@ class AuditControllerTest {
 
         mockMvc.perform(get("/api/users/audit")
                 .header("X-User-Id", "1")
-                .param("userId", "1")
                 .param("action", "DELETE")
                 .param("limit", "50"))
             .andExpect(status().isOk())

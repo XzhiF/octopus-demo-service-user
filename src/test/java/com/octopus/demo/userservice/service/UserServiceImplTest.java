@@ -161,6 +161,46 @@ class UserServiceImplTest {
         verify(auditLogger, never()).log(any());
     }
 
+    @Test
+    @DisplayName("createUser succeeds even when audit logging fails")
+    void createUser_auditFails_businessSucceeds() {
+        var user = createUser(1L, "new", "new@example.com");
+        when(userDao.save(any(User.class))).thenReturn(user);
+        doThrow(new RuntimeException("audit unavailable")).when(auditLogger).log(any(AuditEvent.class));
+
+        User created = userService.createUser(new User());
+
+        assertNotNull(created);
+        verify(userDao).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("updateUser succeeds even when audit logging fails")
+    void updateUser_auditFails_businessSucceeds() {
+        var existing = createUser(1L, "old", "old@example.com");
+        var updated = createUser(1L, "new", "new@example.com");
+        when(userDao.findById(1L)).thenReturn(Optional.of(existing));
+        when(userDao.update(any(User.class))).thenReturn(Optional.of(updated));
+        doThrow(new RuntimeException("audit unavailable")).when(auditLogger).log(any(AuditEvent.class));
+
+        Optional<User> result = userService.updateUser(1L, updated);
+
+        assertTrue(result.isPresent());
+        assertEquals("new", result.get().getUsername());
+    }
+
+    @Test
+    @DisplayName("deleteUser succeeds even when audit logging fails")
+    void deleteUser_auditFails_businessSucceeds() {
+        when(userDao.deleteById(1L)).thenReturn(true);
+        doThrow(new RuntimeException("audit unavailable")).when(auditLogger).log(any(AuditEvent.class));
+
+        boolean deleted = userService.deleteUser(1L);
+
+        assertTrue(deleted);
+        verify(userDao).deleteById(1L);
+    }
+
     private User createUser(Long id, String username, String email) {
         return new User(id, username, email, 25,
                 LocalDateTime.now(), LocalDateTime.now());

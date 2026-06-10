@@ -1,5 +1,6 @@
 package com.octopus.demo.userservice.controller;
 
+import com.octopus.demo.common.audit.AuditContext;
 import com.octopus.demo.common.audit.AuditEvent;
 import com.octopus.demo.common.audit.AuditLogger;
 import com.octopus.demo.common.audit.AuditQuery;
@@ -28,14 +29,15 @@ public class AuditController {
 
     @GetMapping
     public R<List<AuditEvent>> getAuditLogs(
-            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String action,
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE_TIME) Instant to,
             @RequestParam(defaultValue = "100") int limit) {
         int clampedLimit = Math.max(1, Math.min(limit, 500));
-        AuditQuery query = new AuditQuery(userId, action, entityType, from, to, clampedLimit);
+        // Force data isolation: only return audit events for the current authenticated user
+        Long currentUserId = AuditContext.getCurrentUserId();
+        AuditQuery query = new AuditQuery(currentUserId, action, entityType, from, to, clampedLimit);
         return R.ok(auditLogger.query(query));
     }
 }
