@@ -4,3 +4,6 @@ server:
 spring:
   application:
     name: user-service
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
