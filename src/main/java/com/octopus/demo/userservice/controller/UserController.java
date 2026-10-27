@@ -44,6 +44,7 @@ public class UserController {
     public R<UserVO> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setNickname(request.getNickname());
         user.setEmail(request.getEmail());
         user.setAge(request.getAge());
         User created = userService.createUser(user);
@@ -55,6 +56,7 @@ public class UserController {
                                  @Valid @RequestBody UpdateUserRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setNickname(request.getNickname());
         user.setEmail(request.getEmail());
         user.setAge(request.getAge());
         return userService.updateUser(id, user)

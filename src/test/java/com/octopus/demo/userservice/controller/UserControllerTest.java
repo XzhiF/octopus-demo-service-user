@@ -17,6 +17,8 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -32,7 +34,7 @@ class UserControllerTest {
 
     @Test
     void shouldGetAllUsers() throws Exception {
-        var user = new User(1L, "test", "test@example.com", 25,
+        var user = new User(1L, "test", "测试昵称", "test@example.com", 25,
                 LocalDateTime.now(), LocalDateTime.now());
         PageResultBean<User> result = new PageResultBean<>();
         result.setCount(1);
@@ -42,19 +44,21 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].username").value("test"));
+                .andExpect(jsonPath("$.data.list[0].username").value("test"))
+                .andExpect(jsonPath("$.data.list[0].nickname").value("测试昵称"));
     }
 
     @Test
     void shouldGetUserById() throws Exception {
-        var user = new User(1L, "test", "test@example.com", 25,
+        var user = new User(1L, "test", "测试昵称", "test@example.com", 25,
                 LocalDateTime.now(), LocalDateTime.now());
         when(userService.getUserById(1L)).thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.username").value("test"));
+                .andExpect(jsonPath("$.data.username").value("test"))
+                .andExpect(jsonPath("$.data.nickname").value("测试昵称"));
     }
 
     @Test
@@ -69,13 +73,12 @@ class UserControllerTest {
 
     @Test
     void shouldCreateUser() throws Exception {
-        var user = new User(1L, "new", "new@example.com", 30,
-                LocalDateTime.now(), LocalDateTime.now());
-        when(userService.createUser(any(User.class))).thenReturn(user);
+        when(userService.createUser(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         String body = """
                 {
                     "username": "new",
+                    "nickname": "小明",
                     "email": "new@example.com",
                     "age": 30
                 }""";
@@ -85,7 +88,41 @@ class UserControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.username").value("new"));
+                .andExpect(jsonPath("$.data.username").value("new"))
+                .andExpect(jsonPath("$.data.nickname").value("小明"));
+    }
+
+    @Test
+    void shouldReturn400WhenCreatingWithBlankNickname() throws Exception {
+        String body = """
+                {
+                    "username": "new",
+                    "nickname": "  ",
+                    "email": "new@example.com"
+                }""";
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).createUser(any(User.class));
+    }
+
+    @Test
+    void shouldReturn400WhenCreatingWithMissingNickname() throws Exception {
+        String body = """
+                {
+                    "username": "new",
+                    "email": "new@example.com"
+                }""";
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).createUser(any(User.class));
     }
 
     @Test
@@ -104,13 +141,13 @@ class UserControllerTest {
 
     @Test
     void shouldUpdateUser() throws Exception {
-        var user = new User(1L, "updated", "updated@example.com", 28,
-                LocalDateTime.now(), LocalDateTime.now());
-        when(userService.updateUser(eq(1L), any(User.class))).thenReturn(Optional.of(user));
+        when(userService.updateUser(eq(1L), any(User.class)))
+                .thenAnswer(inv -> Optional.of(inv.getArgument(1)));
 
         String body = """
                 {
                     "username": "updated",
+                    "nickname": "更新后的昵称",
                     "email": "updated@example.com",
                     "age": 28
                 }""";
@@ -120,7 +157,25 @@ class UserControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.username").value("updated"));
+                .andExpect(jsonPath("$.data.username").value("updated"))
+                .andExpect(jsonPath("$.data.nickname").value("更新后的昵称"));
+    }
+
+    @Test
+    void shouldReturn400WhenUpdatingWithBlankNickname() throws Exception {
+        String body = """
+                {
+                    "username": "updated",
+                    "nickname": "",
+                    "email": "updated@example.com"
+                }""";
+
+        mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).updateUser(any(), any(User.class));
     }
 
     @Test
@@ -130,6 +185,7 @@ class UserControllerTest {
         String body = """
                 {
                     "username": "ghost",
+                    "nickname": "幽灵",
                     "email": "ghost@example.com"
                 }""";
 

@@ -6,6 +6,7 @@ public class User {
 
     private Long id;
     private String username;
+    private String nickname;
     private String email;
     private Integer age;
     private LocalDateTime createdAt;
@@ -14,14 +15,20 @@ public class User {
     public User() {
     }
 
-    public User(Long id, String username, String email, Integer age,
+    public User(Long id, String username, String nickname, String email, Integer age,
                 LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
+        this.nickname = nickname;
         this.email = email;
         this.age = age;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public User(Long id, String username, String email, Integer age,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, username, null, email, age, createdAt, updatedAt);
     }
 
     public Long getId() {
@@ -38,6 +45,14 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public String getEmail() {

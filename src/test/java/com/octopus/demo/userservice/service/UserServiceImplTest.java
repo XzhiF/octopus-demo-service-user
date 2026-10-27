@@ -1,5 +1,6 @@
 package com.octopus.demo.userservice.service;
 
+import com.octopus.demo.common.sensitive.SensitiveCheckResult;
 import com.octopus.demo.userservice.dao.UserDao;
 import com.octopus.demo.userservice.model.User;
 import com.octopus.demo.userservice.service.impl.UserServiceImpl;
@@ -27,7 +28,7 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userDao);
+        userService = new UserServiceImpl(userDao, text -> SensitiveCheckResult.notHit());
     }
 
     @Test
