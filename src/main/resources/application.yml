@@ -4,3 +4,15 @@ server:
 spring:
   application:
     name: user-service
+
+# 敏感词过滤（由 java-common-sensitive 自动配置提供）
+# 构建顺序：先安装公共库，再构建本服务
+#   mvn -q -f projects/octopus-demo-java-common/pom.xml install -DskipTests
+#   mvn -q -f projects/octopus-demo-service-user/pom.xml test
+#
+# octopus:
+#   sensitive:
+#     enabled: true                       # false = no-op 过滤器，永不命中
+#     # 可选外部词表，UTF-8，每行 "类别|词"（类别为 ABUSE / PORN）
+#     # external-dictionary: classpath:sensitive/custom.txt
+#     # external-dictionary-mode: append  # append（追加内置）| replace（仅用外部）
