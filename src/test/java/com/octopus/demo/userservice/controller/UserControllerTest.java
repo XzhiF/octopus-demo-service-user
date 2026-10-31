@@ -32,7 +32,7 @@ class UserControllerTest {
 
     @Test
     void shouldGetAllUsers() throws Exception {
-        var user = new User(1L, "test", "test@example.com", 25,
+        var user = new User(1L, "test", "张三", "zhangsan@example.com", 25,
                 LocalDateTime.now(), LocalDateTime.now());
         PageResultBean<User> result = new PageResultBean<>();
         result.setCount(1);
@@ -42,19 +42,23 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].username").value("test"));
+                .andExpect(jsonPath("$.data.list[0].username").value("test"))
+                .andExpect(jsonPath("$.data.list[0].nickname").value("张*"))
+                .andExpect(jsonPath("$.data.list[0].email").value("z***@example.com"));
     }
 
     @Test
     void shouldGetUserById() throws Exception {
-        var user = new User(1L, "test", "test@example.com", 25,
+        var user = new User(1L, "test", "张三", "zhangsan@example.com", 25,
                 LocalDateTime.now(), LocalDateTime.now());
         when(userService.getUserById(1L)).thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.username").value("test"));
+                .andExpect(jsonPath("$.data.username").value("test"))
+                .andExpect(jsonPath("$.data.nickname").value("张*"))
+                .andExpect(jsonPath("$.data.email").value("z***@example.com"));
     }
 
     @Test
@@ -69,7 +73,7 @@ class UserControllerTest {
 
     @Test
     void shouldCreateUser() throws Exception {
-        var user = new User(1L, "new", "new@example.com", 30,
+        var user = new User(1L, "new", "张三", "new@example.com", 30,
                 LocalDateTime.now(), LocalDateTime.now());
         when(userService.createUser(any(User.class))).thenReturn(user);
 
@@ -85,7 +89,9 @@ class UserControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.username").value("new"));
+                .andExpect(jsonPath("$.data.username").value("new"))
+                .andExpect(jsonPath("$.data.nickname").value("张*"))
+                .andExpect(jsonPath("$.data.email").value("n***@example.com"));
     }
 
     @Test
@@ -103,8 +109,23 @@ class UserControllerTest {
     }
 
     @Test
+    void shouldReturn400WhenCreatingWithTooLongNickname() throws Exception {
+        String body = """
+                {
+                    "username": "longnick",
+                    "nickname": "%s",
+                    "email": "longnick@example.com"
+                }""".formatted("a".repeat(51));
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldUpdateUser() throws Exception {
-        var user = new User(1L, "updated", "updated@example.com", 28,
+        var user = new User(1L, "updated", "张三", "updated@example.com", 28,
                 LocalDateTime.now(), LocalDateTime.now());
         when(userService.updateUser(eq(1L), any(User.class))).thenReturn(Optional.of(user));
 
@@ -120,7 +141,9 @@ class UserControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.username").value("updated"));
+                .andExpect(jsonPath("$.data.username").value("updated"))
+                .andExpect(jsonPath("$.data.nickname").value("张*"))
+                .andExpect(jsonPath("$.data.email").value("u***@example.com"));
     }
 
     @Test

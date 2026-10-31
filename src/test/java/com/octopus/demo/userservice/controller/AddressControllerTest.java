@@ -48,7 +48,8 @@ class AddressControllerTest {
         mockMvc.perform(get("/api/users/1/addresses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list[0].receiverName").value("张三"));
+                .andExpect(jsonPath("$.data.list[0].receiverName").value("张三"))
+                .andExpect(jsonPath("$.data.list[0].receiverPhone").value("138****8000"));
     }
 
     @Test
@@ -73,7 +74,8 @@ class AddressControllerTest {
         mockMvc.perform(get("/api/users/1/addresses/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.receiverName").value("张三"));
+                .andExpect(jsonPath("$.data.receiverName").value("张三"))
+                .andExpect(jsonPath("$.data.receiverPhone").value("138****8000"));
     }
 
     @Test
@@ -120,7 +122,8 @@ class AddressControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.receiverName").value("张三"));
+                .andExpect(jsonPath("$.data.receiverName").value("张三"))
+                .andExpect(jsonPath("$.data.receiverPhone").value("138****8000"));
     }
 
     @Test
@@ -189,7 +192,8 @@ class AddressControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.receiverName").value("李四"));
+                .andExpect(jsonPath("$.data.receiverName").value("李四"))
+                .andExpect(jsonPath("$.data.receiverPhone").value("139****9000"));
     }
 
     @Test

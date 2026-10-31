@@ -246,7 +246,7 @@ class AddressServiceImplTest {
     }
 
     private User createUser(Long id, String username, String email) {
-        return new User(id, username, email, 25,
+        return new User(id, username, null, email, 25,
                 LocalDateTime.now(), LocalDateTime.now());
     }
 }

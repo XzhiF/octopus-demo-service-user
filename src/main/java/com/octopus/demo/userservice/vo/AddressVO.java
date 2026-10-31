@@ -1,5 +1,6 @@
 package com.octopus.demo.userservice.vo;
 
+import com.octopus.demo.common.util.MaskUtils;
 import com.octopus.demo.userservice.model.Address;
 import java.time.LocalDateTime;
 
@@ -24,7 +25,7 @@ public class AddressVO {
         vo.id = address.getId();
         vo.userId = address.getUserId();
         vo.receiverName = address.getReceiverName();
-        vo.receiverPhone = address.getReceiverPhone();
+        vo.receiverPhone = MaskUtils.maskPhone(address.getReceiverPhone());
         vo.province = address.getProvince();
         vo.city = address.getCity();
         vo.district = address.getDistrict();
