@@ -105,8 +105,72 @@ class UserServiceImplTest {
         assertFalse(deleted);
     }
 
+    @Test
+    void shouldGenerateNicknameWhenCreatingWithBlankNickname() {
+        when(userDao.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User created = userService.createUser(new User());
+
+        assertNotNull(created.getNickname());
+        assertTrue(created.getNickname().matches("用户\\d{6}"),
+                "generated nickname should match 用户\\d{6} but was: " + created.getNickname());
+        verify(userDao).save(any(User.class));
+    }
+
+    @Test
+    void shouldGenerateNicknameWhenCreatingWithWhitespaceNickname() {
+        when(userDao.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        var user = new User();
+        user.setNickname("   ");
+
+        User created = userService.createUser(user);
+
+        assertTrue(created.getNickname().matches("用户\\d{6}"));
+    }
+
+    @Test
+    void shouldTrimNicknameWhenCreatingWithPaddedNickname() {
+        when(userDao.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        var user = new User();
+        user.setNickname("  张三  ");
+
+        User created = userService.createUser(user);
+
+        assertEquals("张三", created.getNickname());
+    }
+
+    @Test
+    void shouldKeepExistingNicknameWhenUpdatingWithBlankNickname() {
+        var existing = createUser(1L, "original", "原昵称", "original@example.com");
+        var updated = createUser(1L, "updated", null, "updated@example.com");
+        when(userDao.findById(1L)).thenReturn(Optional.of(existing));
+        when(userDao.update(any(User.class))).thenAnswer(invocation -> Optional.of(invocation.getArgument(0)));
+
+        Optional<User> result = userService.updateUser(1L, updated);
+
+        assertTrue(result.isPresent());
+        assertEquals("原昵称", result.get().getNickname());
+    }
+
+    @Test
+    void shouldOverwriteNicknameWhenUpdatingWithNonBlankNickname() {
+        var existing = createUser(1L, "original", "原昵称", "original@example.com");
+        var updated = createUser(1L, "updated", "  新昵称  ", "updated@example.com");
+        when(userDao.findById(1L)).thenReturn(Optional.of(existing));
+        when(userDao.update(any(User.class))).thenAnswer(invocation -> Optional.of(invocation.getArgument(0)));
+
+        Optional<User> result = userService.updateUser(1L, updated);
+
+        assertTrue(result.isPresent());
+        assertEquals("新昵称", result.get().getNickname());
+    }
+
     private User createUser(Long id, String username, String email) {
-        return new User(id, username, email, 25,
+        return createUser(id, username, null, email);
+    }
+
+    private User createUser(Long id, String username, String nickname, String email) {
+        return new User(id, username, nickname, email, 25,
                 LocalDateTime.now(), LocalDateTime.now());
     }
 }

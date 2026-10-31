@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -36,6 +37,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
+        user.setNickname(resolveNicknameForCreate(user.getNickname()));
         return userDao.save(user);
     }
 
@@ -44,8 +46,20 @@ public class UserServiceImpl implements UserService {
         return userDao.findById(id)
                 .flatMap(existing -> {
                     user.setId(id);
+                    if (user.getNickname() == null || user.getNickname().trim().isEmpty()) {
+                        user.setNickname(existing.getNickname());
+                    } else {
+                        user.setNickname(user.getNickname().trim());
+                    }
                     return userDao.update(user);
                 });
+    }
+
+    private String resolveNicknameForCreate(String nickname) {
+        if (nickname == null || nickname.trim().isEmpty()) {
+            return "用户" + ThreadLocalRandom.current().nextInt(100000, 1000000);
+        }
+        return nickname.trim();
     }
 
     @Override
