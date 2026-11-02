@@ -4,3 +4,8 @@ server:
 spring:
   application:
     name: user-service
+
+octopus:
+  jwt:
+    secret-key: "octopus-demo-login-dev-secret-key-change-me-32+"
+    expiration-days: 30

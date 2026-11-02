@@ -9,6 +9,10 @@ public class CreateUserRequest {
     @NotBlank(message = "用户名不能为空")
     private String username;
 
+    @NotBlank(message = "密码不能为空")
+    @Size(min = 8, max = 64, message = "密码长度需在 8-64 之间")
+    private String password;
+
     @Size(max = 50, message = "昵称长度不能超过 50")
     private String nickname;
 
@@ -24,6 +28,14 @@ public class CreateUserRequest {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getNickname() {

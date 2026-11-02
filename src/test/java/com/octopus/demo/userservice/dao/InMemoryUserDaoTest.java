@@ -102,6 +102,42 @@ class InMemoryUserDaoTest {
     }
 
     @Test
+    void shouldFindUserByUsername() {
+        User user = new User();
+        user.setUsername("alice");
+        user.setEmail("alice@example.com");
+        User saved = userDao.save(user);
+
+        Optional<User> found = userDao.findByUsername("alice");
+
+        assertTrue(found.isPresent());
+        assertEquals(saved.getId(), found.get().getId());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUsernameNotFound() {
+        assertTrue(userDao.findByUsername("ghost").isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUsernameIsNullOrEmpty() {
+        assertTrue(userDao.findByUsername(null).isEmpty());
+        assertTrue(userDao.findByUsername("").isEmpty());
+        assertTrue(userDao.findByUsername("   ").isEmpty());
+    }
+
+    @Test
+    void shouldFindOnlyExactUsernameMatch() {
+        User user = new User();
+        user.setUsername("alice");
+        user.setEmail("alice@example.com");
+        userDao.save(user);
+
+        assertTrue(userDao.findByUsername("alicee").isEmpty());
+        assertTrue(userDao.findByUsername("Alice").isEmpty());
+    }
+
+    @Test
     void shouldGenerateIncrementalIds() {
         User user1 = new User();
         user1.setUsername("u1");

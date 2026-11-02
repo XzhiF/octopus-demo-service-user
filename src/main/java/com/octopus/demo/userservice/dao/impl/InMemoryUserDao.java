@@ -50,6 +50,16 @@ public class InMemoryUserDao implements UserDao {
     }
 
     @Override
+    public Optional<User> findByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return store.values().stream()
+                .filter(user -> username.equals(user.getUsername()))
+                .findFirst();
+    }
+
+    @Override
     public User save(User user) {
         Long id = idGenerator.getAndIncrement();
         user.setId(id);
