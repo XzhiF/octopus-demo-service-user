@@ -15,7 +15,9 @@ public interface UserService {
 
     Optional<User> getUserById(Long id);
 
-    User createUser(User user);
+    User createUser(User user, String rawPassword);
+
+    Optional<User> authenticate(String username, String rawPassword);
 
     Optional<User> updateUser(Long id, User user);
 

@@ -9,6 +9,7 @@ public class User {
     private String nickname;
     private String email;
     private Integer age;
+    private String passwordHash;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -64,6 +65,14 @@ public class User {
 
     public void setAge(Integer age) {
         this.age = age;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public LocalDateTime getCreatedAt() {

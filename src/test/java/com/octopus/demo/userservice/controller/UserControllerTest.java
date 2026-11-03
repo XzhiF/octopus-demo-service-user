@@ -75,11 +75,12 @@ class UserControllerTest {
     void shouldCreateUser() throws Exception {
         var user = new User(1L, "new", "张三", "new@example.com", 30,
                 LocalDateTime.now(), LocalDateTime.now());
-        when(userService.createUser(any(User.class))).thenReturn(user);
+        when(userService.createUser(any(User.class), eq("Passw0rd!123"))).thenReturn(user);
 
         String body = """
                 {
                     "username": "new",
+                    "password": "Passw0rd!123",
                     "email": "new@example.com",
                     "age": 30
                 }""";
@@ -91,7 +92,73 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.username").value("new"))
                 .andExpect(jsonPath("$.data.nickname").value("张*"))
-                .andExpect(jsonPath("$.data.email").value("n***@example.com"));
+                .andExpect(jsonPath("$.data.email").value("n***@example.com"))
+                .andExpect(jsonPath("$.data.password").doesNotExist())
+                .andExpect(jsonPath("$.data.passwordHash").doesNotExist());
+    }
+
+    @Test
+    void shouldReturn400WhenPasswordMissing() throws Exception {
+        String body = """
+                {
+                    "username": "nopwd",
+                    "email": "nopwd@example.com"
+                }""";
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenPasswordTooShort() throws Exception {
+        String body = """
+                {
+                    "username": "shortpwd",
+                    "password": "short",
+                    "email": "shortpwd@example.com"
+                }""";
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenPasswordTooLong() throws Exception {
+        String body = """
+                {
+                    "username": "longpwd",
+                    "password": "%s",
+                    "email": "longpwd@example.com"
+                }""".formatted("a".repeat(65));
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenUsernameAlreadyExists() throws Exception {
+        when(userService.createUser(any(User.class), any(String.class)))
+                .thenThrow(new IllegalArgumentException("用户名已存在"));
+
+        String body = """
+                {
+                    "username": "dup",
+                    "password": "Passw0rd!123",
+                    "email": "dup@example.com"
+                }""";
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.msg").value("用户名已存在"));
     }
 
     @Test
@@ -113,6 +180,7 @@ class UserControllerTest {
         String body = """
                 {
                     "username": "longnick",
+                    "password": "Passw0rd!123",
                     "nickname": "%s",
                     "email": "longnick@example.com"
                 }""".formatted("a".repeat(51));

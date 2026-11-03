@@ -47,7 +47,7 @@ public class UserController {
         user.setNickname(request.getNickname());
         user.setEmail(request.getEmail());
         user.setAge(request.getAge());
-        User created = userService.createUser(user);
+        User created = userService.createUser(user, request.getPassword());
         return R.ok(UserVO.from(created));
     }
 
