@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.octopus.demo.userservice.mapper.AddressMapper">
+
+    <sql id="columns">
+        id, user_id, receiver_name, receiver_phone, province, city, district,
+        detail_address, postal_code, is_default, created_at, updated_at
+    </sql>
+
+    <select id="findByUserId" resultType="com.octopus.demo.userservice.model.Address">
+        SELECT <include refid="columns"/> FROM addresses
+        WHERE user_id = #{userId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM addresses WHERE user_id = #{userId}
+    </select>
+
+    <select id="findPageByUserId" resultType="com.octopus.demo.userservice.model.Address">
+        SELECT <include refid="columns"/> FROM addresses
+        WHERE user_id = #{userId}
+        ORDER BY id ASC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="findById" resultType="com.octopus.demo.userservice.model.Address">
+        SELECT <include refid="columns"/> FROM addresses WHERE id = #{id}
+    </select>
+
+    <select id="findDefaultByUserId" resultType="com.octopus.demo.userservice.model.Address">
+        SELECT <include refid="columns"/> FROM addresses
+        WHERE user_id = #{userId} AND is_default = 1
+        ORDER BY id ASC
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO addresses (user_id, receiver_name, receiver_phone, province, city, district,
+                               detail_address, postal_code, is_default, created_at, updated_at)
+        VALUES (#{userId}, #{receiverName}, #{receiverPhone}, #{province}, #{city}, #{district},
+                #{detailAddress}, #{postalCode}, #{isDefault}, NOW(6), NOW(6))
+    </insert>
+
+    <update id="update">
+        UPDATE addresses
+        SET user_id = #{userId},
+            receiver_name = #{receiverName},
+            receiver_phone = #{receiverPhone},
+            province = #{province},
+            city = #{city},
+            district = #{district},
+            detail_address = #{detailAddress},
+            postal_code = #{postalCode},
+            is_default = #{isDefault},
+            updated_at = NOW(6)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM addresses WHERE id = #{id}
+    </delete>
+
+    <update id="clearDefault">
+        UPDATE addresses
+        SET is_default = 0
+        WHERE user_id = #{userId} AND is_default = 1
+        <if test="exceptId != null">
+            AND id &lt;&gt; #{exceptId}
+        </if>
+    </update>
+
+</mapper>

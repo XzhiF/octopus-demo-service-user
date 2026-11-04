@@ -9,8 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -24,7 +28,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Testcontainers
 class AuthControllerTest {
+
+    @Container
+    @ServiceConnection
+    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
+            .withDatabaseName("octopus_demo")
+            .withUsername("octopus")
+            .withPassword("octopus")
+            .withInitScript("db/schema.sql");
 
     private static final String PASSWORD = "Passw0rd!123";
     private static final long EXPECTED_EXPIRES_IN_SECONDS = 30L * 86400L;
