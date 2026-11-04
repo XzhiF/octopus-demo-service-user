@@ -7,6 +7,7 @@ import com.octopus.demo.userservice.dao.UserDao;
 import com.octopus.demo.userservice.model.Address;
 import com.octopus.demo.userservice.service.AddressService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional
     public Optional<Address> createAddress(Long userId, Address address) {
         if (userDao.findById(userId).isEmpty()) {
             return Optional.empty();
@@ -48,6 +50,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional
     public Optional<Address> updateAddress(Long id, Long userId, Address address) {
         Optional<Address> existing = addressDao.findById(id);
         if (existing.isEmpty()) {
@@ -75,6 +78,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional
     public boolean deleteAddress(Long id, Long userId) {
         Optional<Address> existing = addressDao.findById(id);
         if (existing.isEmpty()) {
@@ -101,6 +105,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional
     public Optional<Address> setDefaultAddress(Long id, Long userId) {
         Optional<Address> existing = addressDao.findById(id);
         if (existing.isEmpty()) {
