@@ -70,3 +70,4 @@ mvn -B test
 ```
 
 `MybatisUserDaoTest` 与 `AuthControllerTest` 使用 Testcontainers 自动拉起 `mysql:8.4`（随机端口，建表脚本复用 `db/schema.sql`），需 Docker Desktop 运行中；测试不会连接或写入本机 3306 的 `octopus_demo` 库。
+P3 cabin dispatch verified
