@@ -42,7 +42,7 @@
             <if test="email != null">email = #{email},</if>
             age = #{age},
             password_hash = #{passwordHash},
-            phone = #{phone},
+            <if test="phone != null">phone = #{phone},</if>
             updated_at = NOW(6)
         </set>
         WHERE id = #{id}
