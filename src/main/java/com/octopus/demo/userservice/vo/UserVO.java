@@ -10,6 +10,8 @@ public class UserVO {
     private String nickname;
     private String email;
     private Integer age;
+    private String phone;
+    private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -22,6 +24,8 @@ public class UserVO {
         vo.nickname = MaskUtils.maskNickname(user.getNickname());
         vo.email = MaskUtils.maskEmail(user.getEmail());
         vo.age = user.getAge();
+        vo.phone = MaskUtils.maskPhone(user.getPhone());
+        vo.status = user.getStatus();
         vo.createdAt = user.getCreatedAt();
         vo.updatedAt = user.getUpdatedAt();
         return vo;
@@ -37,6 +41,10 @@ public class UserVO {
     public void setEmail(String email) { this.email = email; }
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

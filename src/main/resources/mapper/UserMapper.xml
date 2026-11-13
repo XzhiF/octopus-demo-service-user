@@ -4,7 +4,7 @@
 <mapper namespace="com.octopus.demo.userservice.mapper.UserMapper">
 
     <sql id="columns">
-        id, username, nickname, email, age, password_hash, created_at, updated_at
+        id, username, nickname, email, age, password_hash, status, phone, created_at, updated_at
     </sql>
 
     <select id="findAll" resultType="com.octopus.demo.userservice.model.User">
@@ -30,8 +30,8 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users (username, nickname, email, age, password_hash, created_at, updated_at)
-        VALUES (#{username}, #{nickname}, #{email}, #{age}, #{passwordHash}, NOW(6), NOW(6))
+        INSERT INTO users (username, nickname, email, age, password_hash, status, phone, created_at, updated_at)
+        VALUES (#{username}, #{nickname}, #{email}, #{age}, #{passwordHash}, #{status}, #{phone}, NOW(6), NOW(6))
     </insert>
 
     <update id="update">
@@ -42,6 +42,7 @@
             <if test="email != null">email = #{email},</if>
             age = #{age},
             password_hash = #{passwordHash},
+            phone = #{phone},
             updated_at = NOW(6)
         </set>
         WHERE id = #{id}

@@ -10,6 +10,8 @@ public class User {
     private String email;
     private Integer age;
     private String passwordHash;
+    private Integer status = 1;
+    private String phone;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -73,6 +75,22 @@ public class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public LocalDateTime getCreatedAt() {

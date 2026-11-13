@@ -43,6 +43,9 @@ public class UserServiceImpl implements UserService {
         }
         user.setPasswordHash(PasswordUtils.encode(rawPassword));
         user.setNickname(resolveNicknameForCreate(user.getNickname()));
+        if (user.getStatus() == null) {
+            user.setStatus(1);
+        }
         return userDao.save(user);
     }
 

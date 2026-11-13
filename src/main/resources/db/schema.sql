@@ -10,11 +10,32 @@ CREATE TABLE IF NOT EXISTS users (
   email         VARCHAR(255) NOT NULL,
   age           INT          NULL,
   password_hash VARCHAR(255) NOT NULL,
+  status        TINYINT      NOT NULL DEFAULT 1,
+  phone         VARCHAR(32)  NULL,
   created_at    DATETIME(6)  NOT NULL,
   updated_at    DATETIME(6)  NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- CREATE TABLE IF NOT EXISTS 不会给已存在的 users 补列，这里按需 ALTER 兼容旧库。
+SET @add_users_status := IF(
+  (SELECT COUNT(*) FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'status') = 0,
+  'ALTER TABLE users ADD COLUMN status TINYINT NOT NULL DEFAULT 1',
+  'DO 0');
+PREPARE add_users_status FROM @add_users_status;
+EXECUTE add_users_status;
+DEALLOCATE PREPARE add_users_status;
+
+SET @add_users_phone := IF(
+  (SELECT COUNT(*) FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'phone') = 0,
+  'ALTER TABLE users ADD COLUMN phone VARCHAR(32) NULL',
+  'DO 0');
+PREPARE add_users_phone FROM @add_users_phone;
+EXECUTE add_users_phone;
+DEALLOCATE PREPARE add_users_phone;
 
 CREATE TABLE IF NOT EXISTS addresses (
   id             BIGINT       NOT NULL AUTO_INCREMENT,

@@ -6,6 +6,7 @@ import com.octopus.demo.common.bean.R;
 import com.octopus.demo.common.util.JwtUtil;
 import com.octopus.demo.userservice.config.JwtProperties;
 import com.octopus.demo.userservice.dto.LoginRequest;
+import com.octopus.demo.userservice.dto.RegisterRequest;
 import com.octopus.demo.userservice.model.User;
 import com.octopus.demo.userservice.service.UserService;
 import com.octopus.demo.userservice.vo.LoginVO;
@@ -22,15 +23,28 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth")
-public class AuthController {
+@RequestMapping("/api/member/auth")
+public class MemberAuthController {
+
+    private static final int STATUS_DISABLED = 0;
 
     private final UserService userService;
     private final JwtProperties jwtProperties;
 
-    public AuthController(UserService userService, JwtProperties jwtProperties) {
+    public MemberAuthController(UserService userService, JwtProperties jwtProperties) {
         this.userService = userService;
         this.jwtProperties = jwtProperties;
+    }
+
+    @PostMapping("/register")
+    public R<UserVO> register(@Valid @RequestBody RegisterRequest request) {
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setNickname(request.getNickname());
+        user.setEmail(request.getEmail());
+        user.setAge(request.getAge());
+        user.setPhone(request.getPhone());
+        return R.ok(UserVO.from(userService.createUser(user, request.getPassword())));
     }
 
     @PostMapping("/login")
@@ -40,7 +54,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(R.fail(401, "用户名或密码错误"));
         }
-        return ResponseEntity.ok(R.ok(buildLoginVO(authenticated.get())));
+        User user = authenticated.get();
+        if (user.getStatus() != null && user.getStatus() == STATUS_DISABLED) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(R.fail(403, "账号已停用"));
+        }
+        return ResponseEntity.ok(R.ok(buildLoginVO(user)));
+    }
+
+    @RequireAuth
+    @PostMapping("/logout")
+    public R<Void> logout() {
+        return R.ok();
     }
 
     @RequireAuth

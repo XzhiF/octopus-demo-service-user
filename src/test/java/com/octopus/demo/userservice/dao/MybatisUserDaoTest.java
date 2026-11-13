@@ -180,6 +180,34 @@ class MybatisUserDaoTest {
         assertEquals("用户名已存在", ex.getMessage());
     }
 
+    @Test
+    void savePersistsStatusAndPhone() {
+        User user = newUser("mysql_phase1_status_phone", "状态", "status@example.com", 33);
+        user.setPhone("13812348888");
+
+        User saved = userDao.save(user);
+
+        assertEquals(1, saved.getStatus());
+        assertEquals("13812348888", saved.getPhone());
+
+        var row = jdbcTemplate.queryForMap("SELECT status, phone FROM users WHERE id = ?", saved.getId());
+        assertEquals(1, ((Number) row.get("status")).intValue());
+        assertEquals("13812348888", row.get("phone"));
+    }
+
+    @Test
+    void updateChangesPhoneButKeepsStatus() {
+        User saved = userDao.save(newUser("mysql_phase1_phone_update", "电话", "phone@example.com", 34));
+        jdbcTemplate.update("UPDATE users SET status = 0 WHERE id = ?", saved.getId());
+
+        saved.setPhone("13900001111");
+        Optional<User> updated = userDao.update(saved);
+
+        assertTrue(updated.isPresent());
+        assertEquals("13900001111", updated.get().getPhone());
+        assertEquals(0, updated.get().getStatus());
+    }
+
     private void saveUsers(int count) {
         for (int i = 1; i <= count; i++) {
             userDao.save(newUser("mysql_phase1_page_" + i, "分页" + i, "page" + i + "@example.com", 20 + i));

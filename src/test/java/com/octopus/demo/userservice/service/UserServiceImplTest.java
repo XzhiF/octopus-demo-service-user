@@ -4,6 +4,7 @@ import com.octopus.demo.common.util.PasswordUtils;
 import com.octopus.demo.userservice.dao.UserDao;
 import com.octopus.demo.userservice.model.User;
 import com.octopus.demo.userservice.service.impl.UserServiceImpl;
+import com.octopus.demo.userservice.vo.UserVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -250,6 +251,29 @@ class UserServiceImplTest {
 
         assertTrue(result.isPresent());
         assertEquals(existing.getPasswordHash(), result.get().getPasswordHash());
+    }
+
+    @Test
+    void shouldDefaultStatusToOneWhenCreatingUser() {
+        when(userDao.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        var user = new User();
+        user.setStatus(null);
+
+        User created = userService.createUser(user, "Passw0rd!123");
+
+        assertEquals(1, created.getStatus());
+    }
+
+    @Test
+    void shouldMaskPhoneAndExposeStatusInUserVO() {
+        var user = createUser(1L, "alice", "alice@example.com");
+        user.setPhone("13812348888");
+        user.setStatus(1);
+
+        UserVO vo = UserVO.from(user);
+
+        assertEquals("138****8888", vo.getPhone());
+        assertEquals(1, vo.getStatus());
     }
 
     private User createUser(Long id, String username, String email) {
